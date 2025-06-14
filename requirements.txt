@@ -1,1 +1,6 @@
 fastapi[standard]
+pydantic
+pymongo
+python-dotenv
+passlib[bcrypt]
+python-jose
