@@ -1,4 +1,3 @@
-import math
 import time
 from typing import Annotated
 from bson import ObjectId
@@ -9,6 +8,7 @@ from passlib.context import CryptContext
 from app.db.db import get_collection
 from pymongo.collection import Collection as AsyncCollection
 from app.schemas.user import User
+from app.schemas.auth.token import Token
 from app.services.auth.token import TokenService, get_token_service
 
 oauth2 = OAuth2PasswordBearer(
@@ -29,7 +29,7 @@ class AuthService:
         self.users = users
         self.token_service = token_service
 
-    async def login(self, email: str, password: str):
+    async def login(self, email: str, password: str) -> Token:
         user = await self.users.find_one({"email": email})
         
         if not user:
@@ -41,13 +41,15 @@ class AuthService:
                 status_code=400, detail="Email o contraseña incorrectos")
 
         user_id = str(user["_id"])
-        token = await self.token_service.create_token(user_id, user["email"])
+        tokens = await self.token_service.create_tokens(user_id, user["email"])
         
-        return {
-            "access_token": token,
-            "refresh_token": token,
-            "token_type": "bearer",
-        }
+        return tokens
+
+    async def refresh_token(self, refresh_token: str) -> Token:
+        return await self.token_service.refresh_access_token(refresh_token)
+
+    async def logout(self, token: str):
+        return await self.token_service.revoke_token(token)
 
     async def getUserByToken(self, token: Annotated[str, Depends(oauth2)]) -> User:
         exception = HTTPException(
@@ -89,7 +91,6 @@ class AuthService:
         )
     
     async def verify_user(self, token: Annotated[str, Depends(oauth2)]) -> User:
-        print("🚀 ~ auth.py:93 ~ token:", token)
         user = await self.getUserByToken(token)
         return user
 
