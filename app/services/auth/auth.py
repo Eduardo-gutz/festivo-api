@@ -4,6 +4,7 @@ from bson import ObjectId
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
+from firebase_admin import auth
 from passlib.context import CryptContext
 from app.db.db import get_collection
 from pymongo.collection import Collection as AsyncCollection
@@ -45,11 +46,36 @@ class AuthService:
         
         return tokens
 
+    async def login_with_firebase(self, firebase_token: str) -> Token:
+        try:
+            decoded_token = auth.verify_id_token(firebase_token)
+            
+            uid = decoded_token.get("uid")
+            email = decoded_token.get("email")
+            
+            if not email:
+                raise HTTPException(
+                    status_code=400, detail="El token no contiene un correo electrónico válido")
+            
+            user = await self.users.find_one({"uid": uid, "email": email})
+            
+            if not user:
+               raise HTTPException(
+                    status_code=400, detail="El token no contiene un correo electrónico válido")
+            
+            user_id = str(user["_id"])
+            tokens = await self.token_service.create_tokens(user_id, email)
+            return tokens
+            
+        except auth.InvalidIdTokenError:
+            raise HTTPException(
+                status_code=401, detail="Token de autenticación inválido o expirado")
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Error al autenticar: {str(e)}")
+
     async def refresh_token(self, refresh_token: str) -> Token:
         return await self.token_service.refresh_access_token(refresh_token)
-
-    async def logout(self, token: str):
-        return await self.token_service.revoke_token(token)
 
     async def getUserByToken(self, token: Annotated[str, Depends(oauth2)]) -> User:
         exception = HTTPException(
@@ -62,19 +88,15 @@ class AuthService:
 
         try:
             user_jwt = self.token_service.decode_token(token)
-            if user_jwt.get("sub") is None:
-                raise exception
+            sub = user_jwt.get("sub")
             
-            if await self.token_service.is_token_revoked(user_jwt.get("jti")):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token Invalido",
-                    headers={"WWW-Authenticate": "Bearer"})
+            if sub is None:
+                raise exception
             
         except JWTError:
             raise exception
 
-        user = await self.users.find_one({"_id": ObjectId(user_jwt.get("sub"))})
+        user = await self.users.find_one({"_id": ObjectId(sub)})
         
         if user is None:
             raise exception

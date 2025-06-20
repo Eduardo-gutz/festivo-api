@@ -41,9 +41,6 @@ class TokenService:
             jti=refresh_jti
         )
         
-        await self.tokens.insert_one(access_token_data.model_dump())
-        await self.tokens.insert_one(refresh_token_data.model_dump())
-        
         access_token = jwt.encode(access_token_data.model_dump(), self.SECRET_KEY, algorithm=self.ALGORITHM)
         refresh_token = jwt.encode(refresh_token_data.model_dump(), self.SECRET_KEY, algorithm=self.ALGORITHM)
         
@@ -60,12 +57,8 @@ class TokenService:
         try:
             payload = self.decode_token(refresh_token)
             
-            if await self.is_token_revoked(payload.get("jti")):
-                raise HTTPException(status_code=401, detail="Refresh token ha sido revocado")
-            
             current_time = int(time.time())
             if payload.get("exp") and current_time > payload.get("exp"):
-                await self.revoke_token_by_jti(payload.get("jti"))
                 raise HTTPException(status_code=401, detail="Refresh token expirado")
             
             user_id = payload.get("sub")
@@ -74,32 +67,10 @@ class TokenService:
             if not user_id or not user_email:
                 raise HTTPException(status_code=401, detail="Token inválido")
                 
-            await self.revoke_token_by_jti(payload.get("jti"))
-            
             return await self.create_tokens(user_id, user_email)
             
         except JWTError:
             raise HTTPException(status_code=401, detail="Token inválido o malformado")
-
-    async def is_token_revoked(self, jti: str) -> bool:
-        token = await self.revoked_tokens.find_one({"jti": jti})
-        return token is not None
-
-    async def revoke_token(self, token: str):
-        try:
-            payload = jwt.decode(token, self.SECRET_KEY,
-                             algorithms=[self.ALGORITHM])
-            await self.revoke_token_by_jti(payload["jti"])
-            return {"message": "Token revocado exitosamente"}
-        except JWTError:
-            raise HTTPException(status_code=400, detail="Token inválido")
-            
-    async def revoke_token_by_jti(self, jti: str):
-        await self.revoked_tokens.insert_one({"jti": jti, "exp": int(time.time()), "revoked_at": int(time.time())})
-
-    async def cleanup_expired_tokens(self):
-        current_time = int(time.time())
-        await self.revoked_tokens.delete_many({"revoked_at": {"$lt": current_time - (REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60)}})
 
 
 def get_token_service(

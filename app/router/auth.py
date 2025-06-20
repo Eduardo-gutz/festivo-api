@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Body
-from app.schemas.user import UserCreateByPassword
+from app.schemas.user import UserCreate
 from app.schemas.auth.token import Token
 from app.services.users.user import UserService, get_user_service
 from app.services.auth.auth import AuthService, get_auth_service
@@ -24,6 +24,13 @@ async def login(
 ):
     return await auth_service.login(auth.username, auth.password)
 
+@router.post("/login/token", response_model=Token)
+async def login_with_firebase(
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    token: str = Body(..., embed=True)
+):
+    return await auth_service.login_with_firebase(token)
+
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
@@ -35,16 +42,8 @@ async def refresh_token(
 async def register(
     user_service: Annotated[UserService, Depends(get_user_service)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
-    user: UserCreateByPassword
+    user: UserCreate
 ):
-    new_user = await user_service.create_user(user)
-    response = await auth_service.login(new_user.email, user.password)
+    await user_service.create_user(user)
+    response = await auth_service.login_with_firebase(user.token)
     return response
-
-
-@router.post("/logout")
-async def logout(
-    token: Annotated[str, Depends(oauth2)],
-    auth_service: Annotated[AuthService, Depends(get_auth_service)]
-):
-    return await auth_service.logout(token) 

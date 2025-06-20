@@ -17,16 +17,18 @@ class User(BaseModel):
     uid: Optional[str] = None
     provider: Optional[Provider] = Provider.PASSWORD
     created_at: int
+    verify_email: Optional[bool] = False
 
-class UserCreateByPassword(BaseModel):
+class UserCreate(BaseModel):
     full_name: str
     email: str
     username: str
     provider: Optional[Provider] = Provider.PASSWORD
-    password: str
+    token: Optional[str] = None
 
 class UserUpdate(User):
     password: Optional[str] = None
     uid: Optional[str] = None
+    verify_email: Optional[bool] = None
     created_at: Optional[int] = None
     updated_at: Optional[int] = None
