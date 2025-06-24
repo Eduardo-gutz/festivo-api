@@ -7,6 +7,7 @@ from app.db.db import get_collection
 from pymongo.collection import Collection as AsyncCollection
 from jose import jwt, JWTError
 from app.schemas.auth.token import TokenPayload, Token
+from app.core.utils.error_codes import ErrorCodes
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1
 REFRESH_TOKEN_EXPIRE_DAYS = 7
@@ -59,18 +60,18 @@ class TokenService:
             
             current_time = int(time.time())
             if payload.get("exp") and current_time > payload.get("exp"):
-                raise HTTPException(status_code=401, detail="Refresh token expirado")
+                raise HTTPException(status_code=401, detail=ErrorCodes.INVALID_TOKEN)
             
             user_id = payload.get("sub")
             user_email = payload.get("email")
             
             if not user_id or not user_email:
-                raise HTTPException(status_code=401, detail="Token inválido")
+                raise HTTPException(status_code=401, detail=ErrorCodes.INVALID_TOKEN)
                 
             return await self.create_tokens(user_id, user_email)
             
         except JWTError:
-            raise HTTPException(status_code=401, detail="Token inválido o malformado")
+            raise HTTPException(status_code=401, detail=ErrorCodes.INVALID_TOKEN)
 
 
 def get_token_service(

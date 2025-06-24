@@ -8,6 +8,7 @@ from pymongo.collection import Collection as AsyncCollection
 from app.db.db import get_collection
 from app.schemas.user import User, UserCreate
 from firebase_admin import auth
+from app.core.utils.error_codes import ErrorCodes
 
 crypt = CryptContext(schemes=['bcrypt'])
 
@@ -22,18 +23,18 @@ class UserService:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Token invalido"
+                detail=ErrorCodes.INVALID_TOKEN
             )
 
         is_valid_email = re.match(
             r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", user.email)
 
         if not is_valid_email:
-            raise HTTPException(status_code=400, detail="Email Invalido")
+            raise HTTPException(status_code=400, detail=ErrorCodes.INVALID_EMAIL)
         
         already_email = await self.users.find_one({"email": user.email})
         if already_email:
-            raise HTTPException(status_code=400, detail="Email ya registrado")
+            raise HTTPException(status_code=400, detail=ErrorCodes.EMAIL_ALREADY_REGISTERED)
 
         db_user = {
             "uid": decoded_token.get("uid"),

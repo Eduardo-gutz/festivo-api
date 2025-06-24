@@ -11,6 +11,7 @@ from pymongo.collection import Collection as AsyncCollection
 from app.schemas.user import User
 from app.schemas.auth.token import Token
 from app.services.auth.token import TokenService, get_token_service
+from app.core.utils.error_codes import ErrorCodes
 
 oauth2 = OAuth2PasswordBearer(
     tokenUrl="auth/login",
@@ -35,11 +36,11 @@ class AuthService:
         
         if not user:
             raise HTTPException(
-                status_code=400, detail="Email o contraseña incorrectos")
+                status_code=400, detail=ErrorCodes.INVALID_CREDENTIALS)
 
         if not crypt.verify(password, user["password"]):
             raise HTTPException(
-                status_code=400, detail="Email o contraseña incorrectos")
+                status_code=400, detail=ErrorCodes.INVALID_CREDENTIALS)
 
         user_id = str(user["_id"])
         tokens = await self.token_service.create_tokens(user_id, user["email"])
@@ -55,13 +56,13 @@ class AuthService:
             
             if not email:
                 raise HTTPException(
-                    status_code=400, detail="El token no contiene un correo electrónico válido")
+                    status_code=400, detail=ErrorCodes.INVALID_EMAIL)
             
             user = await self.users.find_one({"uid": uid, "email": email})
             
             if not user:
                raise HTTPException(
-                    status_code=400, detail="El token no contiene un correo electrónico válido")
+                    status_code=400, detail=ErrorCodes.INVALID_EMAIL)
             
             user_id = str(user["_id"])
             tokens = await self.token_service.create_tokens(user_id, email)
@@ -69,10 +70,10 @@ class AuthService:
             
         except auth.InvalidIdTokenError:
             raise HTTPException(
-                status_code=401, detail="Token de autenticación inválido o expirado")
+                status_code=401, detail=ErrorCodes.INVALID_TOKEN)
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"Error al autenticar: {str(e)}")
+                status_code=500, detail=ErrorCodes.INTERNAL_SERVER_ERROR)
 
     async def refresh_token(self, refresh_token: str) -> Token:
         return await self.token_service.refresh_access_token(refresh_token)
@@ -80,7 +81,7 @@ class AuthService:
     async def getUserByToken(self, token: Annotated[str, Depends(oauth2)]) -> User:
         exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales de autenticación inválidas",
+            detail=ErrorCodes.INVALID_CREDENTIALS,
             headers={"WWW-Authenticate": "Bearer"})
 
         if not token:
