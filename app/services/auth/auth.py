@@ -71,9 +71,6 @@ class AuthService:
         except auth.InvalidIdTokenError:
             raise HTTPException(
                 status_code=401, detail=ErrorCodes.INVALID_TOKEN)
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=ErrorCodes.INTERNAL_SERVER_ERROR)
 
     async def refresh_token(self, refresh_token: str) -> Token:
         return await self.token_service.refresh_access_token(refresh_token)

@@ -92,7 +92,7 @@ async def test_user_creation_invalid_email(monkeypatch, mock_db):
     with pytest.raises(Exception) as excinfo:
         await user_service.create_user(user_data)
     
-    assert ErrorCodes["INVALID_EMAIL"] in str(excinfo.value)
+    assert ErrorCodes.INVALID_EMAIL in str(excinfo.value)
     
 @pytest.mark.asyncio
 async def test_user_creation_duplicate_email(monkeypatch, mock_db):
@@ -126,7 +126,7 @@ async def test_user_creation_duplicate_email(monkeypatch, mock_db):
     with pytest.raises(Exception) as excinfo:
         await user_service.create_user(user_data_2)
     
-    assert ErrorCodes["EMAIL_ALREADY_REGISTERED"] in str(excinfo.value)
+    assert ErrorCodes.EMAIL_ALREADY_REGISTERED in str(excinfo.value)
     
     users_in_db = await users_collection.find({"email": mock_user["email"]}).to_list(length=None)
     assert len(users_in_db) == 1
