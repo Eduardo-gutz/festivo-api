@@ -2,14 +2,14 @@ import time
 import uuid
 from typing import Annotated, Dict
 from fastapi import Depends, HTTPException
-from app.core.globals import SECRET_KEY, ALGORITHM
+from app.core.globals import SECRET_KEY, ALGORITHM, EXPIRATION_TOKEN
 from app.db.db import get_collection
 from pymongo.collection import Collection as AsyncCollection
 from jose import jwt, JWTError
-from app.schemas.auth.token import TokenPayload, Token
+from app.modules.auth.schemas.token import TokenPayload, Token
 from app.core.utils.error_codes import ErrorCodes
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 1
+ACCESS_TOKEN_EXPIRE_MINUTES = int(EXPIRATION_TOKEN)
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 class TokenService:

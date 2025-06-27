@@ -1,6 +1,11 @@
 import pytest
 from mongomock_motor import AsyncMongoMockClient
 from pymongo.collection import Collection
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.db.db import MongoDB, get_collection
 from fastapi.testclient import TestClient
 from app.main import app

@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from pymongo.collection import Collection as AsyncCollection
 
 from app.db.db import get_collection
-from app.schemas.user import User, UserCreate
+from app.modules.user.schemas.user import User, UserCreate
 from firebase_admin import auth
 from app.core.utils.error_codes import ErrorCodes
 

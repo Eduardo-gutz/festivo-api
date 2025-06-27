@@ -1,7 +1,7 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
-from app.schemas.user import User
-from app.services.auth.auth import get_authenticated_user
+from fastapi import APIRouter, Depends, Security
+from app.modules.user.schemas.user import User
+from app.modules.auth.services.auth import get_authenticated_user
 
 router = APIRouter(
     prefix="/user",

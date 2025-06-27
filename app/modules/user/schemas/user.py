@@ -7,6 +7,11 @@ from app.db.objectIdMongo import PyObjectId
 class Provider(str, Enum):
     PASSWORD = 'password'
     GOOGLE = 'google'
+    
+class Role(str, Enum):
+    ADMIN = 'admin'
+    USER = 'user'
+    PUBLISHER = 'publisher'
 
 class User(BaseModel):
     id: Optional[PyObjectId] = Field(None, alias="_id")
@@ -18,6 +23,7 @@ class User(BaseModel):
     provider: Optional[Provider] = Provider.PASSWORD
     created_at: int
     verify_email: Optional[bool] = False
+    role: Optional[Role] = Role.USER
 
 class UserCreate(BaseModel):
     full_name: str
@@ -32,3 +38,9 @@ class UserUpdate(User):
     verify_email: Optional[bool] = None
     created_at: Optional[int] = None
     updated_at: Optional[int] = None
+    
+class UserMinimal(BaseModel):
+    id: Optional[PyObjectId] = Field(None, alias="_id")
+    username: str
+    full_name: str
+    avatar: Optional[str] = None

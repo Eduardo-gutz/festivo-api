@@ -1,8 +1,8 @@
 import pytest
 import time as t
 from unittest.mock import patch, MagicMock
-from app.services.users.user import UserService
-from app.schemas.user import UserCreate, User
+from app.modules.user.services.user import UserService
+from app.modules.user.schemas.user import UserCreate, User
 from firebase_admin import auth
 from app.core.utils.error_codes import ErrorCodes
 

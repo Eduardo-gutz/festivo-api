@@ -1,16 +1,10 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Body
-from app.schemas.user import UserCreate
-from app.schemas.auth.token import Token
-from app.services.users.user import UserService, get_user_service
-from app.services.auth.auth import AuthService, get_auth_service
-from app.services.auth.token import TokenService, get_token_service
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-
-oauth2 = OAuth2PasswordBearer(
-    tokenUrl="auth/login",
-    auto_error=False
-)
+from app.modules.auth.services.auth import AuthService, get_auth_service
+from app.modules.user.schemas.user import UserCreate
+from app.modules.auth.schemas.token import Token
+from app.modules.user.services.user import UserService, get_user_service
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(
     prefix="/auth",
@@ -22,7 +16,7 @@ async def login(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     auth: OAuth2PasswordRequestForm = Depends()
 ):
-    return await auth_service.login(auth.username, auth.password)
+    return await auth_service.login_with_firebase(auth.password)
 
 @router.post("/login/token", response_model=Token)
 async def login_with_firebase(
