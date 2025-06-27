@@ -58,12 +58,14 @@ class AuthService:
             
             uid = decoded_token.get("uid")
             email = decoded_token.get("email")
+            print("🚀 ~ auth.py:61 ~ email:", email, uid)
             
             if not email:
                 raise HTTPException(
                     status_code=400, detail=ErrorCodes.INVALID_EMAIL)
             
             user = await self.users.find_one({"uid": uid, "email": email})
+            print("🚀 ~ auth.py:67 ~ user:", user)
             
             if not user:
                raise HTTPException(

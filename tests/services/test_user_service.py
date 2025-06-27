@@ -132,3 +132,30 @@ async def test_user_creation_duplicate_email(monkeypatch, mock_db):
     assert len(users_in_db) == 1
     assert users_in_db[0]["full_name"] == "Test User 1"
     
+@pytest.mark.asyncio
+async def test_user_creation_invalid_token(monkeypatch, mock_db):
+    """Test que verifica que la creación de usuario falle con un token inválido"""
+    monkeypatch.setattr(
+        auth,
+        "verify_id_token",
+        mock_verify_token
+    )
+    users_collection = mock_db.get_collection("users")
+    user_service = UserService(users_collection)
+    
+    user_data = UserCreate(
+        email=mock_user["email"],
+        full_name="Test User",
+        token="invalid_token_that_will_fail",
+        provider="google",
+        username="testuser"
+    )
+    
+    with pytest.raises(Exception) as excinfo:
+        await user_service.create_user(user_data)
+    
+    assert ErrorCodes.INVALID_TOKEN in str(excinfo.value)
+    
+    user_in_db = await users_collection.find_one({"email": mock_user["email"]})
+    assert user_in_db is None
+    

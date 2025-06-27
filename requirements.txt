@@ -8,3 +8,5 @@ firebase-admin
 pytest
 mongomock-motor
 pytest-asyncio
+pytest-cov
+pytest-xdist

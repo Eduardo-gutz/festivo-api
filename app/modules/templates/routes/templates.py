@@ -7,7 +7,7 @@ from app.modules.templates.services.templates import TemplateService, get_templa
 from app.modules.auth.services.auth import get_authenticated_user
 from app.modules.user.schemas.user import User, Role
 from app.core.utils.error_codes import ErrorCodes
-from app.modules.templates.moodels.templateResponse import TemplateResponse, TemplatesListResponse, TemplateCreate
+from app.modules.templates.models.template_response import TemplateResponse, TemplatesListResponse, TemplateCreate
 
 router = APIRouter(
     prefix="/templates",

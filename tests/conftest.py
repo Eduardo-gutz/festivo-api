@@ -23,7 +23,7 @@ def mock_db():
 @pytest.fixture
 def client(mock_db):
     def mock_get_collection(collection_name: str):
-        return lambda: mock_db.get_collection(collection_name)
+        return lambda: mock_db[collection_name]
 
     app.dependency_overrides[get_collection] = mock_get_collection
 

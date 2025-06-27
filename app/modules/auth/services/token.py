@@ -58,10 +58,6 @@ class TokenService:
         try:
             payload = self.decode_token(refresh_token)
             
-            current_time = int(time.time())
-            if payload.get("exp") and current_time > payload.get("exp"):
-                raise HTTPException(status_code=401, detail=ErrorCodes.INVALID_TOKEN)
-            
             user_id = payload.get("sub")
             user_email = payload.get("email")
             
@@ -70,7 +66,7 @@ class TokenService:
                 
             return await self.create_tokens(user_id, user_email)
             
-        except JWTError:
+        except JWTError as e:
             raise HTTPException(status_code=401, detail=ErrorCodes.INVALID_TOKEN)
 
 

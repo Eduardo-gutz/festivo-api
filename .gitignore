@@ -2,3 +2,8 @@ env/
 **/__pycache__/
 
 .env
+
+htmlcov/
+.coverage
+.vscode/
+**/serviceAccountKey.json

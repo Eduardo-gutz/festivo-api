@@ -44,7 +44,7 @@ class TemplateService:
         result = await self.templates.insert_one(db_template)
         db_template["_id"] = result.inserted_id
 
-        template = await self.templates.aggregate([
+        template_cursor = await self.templates.aggregate([
             {
                 "$match": {"_id": result.inserted_id}
             },
@@ -56,7 +56,7 @@ class TemplateService:
             }},
             {"$unwind": "$user"}
         ])
-        template = await template.to_list(length=1)
+        template = await template_cursor.to_list(length=1)
 
         return Template.model_validate(template[0])
 
